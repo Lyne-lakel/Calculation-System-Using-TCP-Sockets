@@ -68,10 +68,14 @@ int main() {
     }
 
     while (1) {
+        printf("\n------------------------------------\n");
+        printf("New calculation\n");
+        printf("------------------------------------\n");
+
         char choice;
         printf("Do you want to do a calculation? (y/n): ");
         scanf(" %c", &choice);
-
+        
         if (choice == 'n' || choice == 'N') {
             break;  // exit the loop
         }
@@ -82,23 +86,55 @@ int main() {
         printf("You entered: %d %c %d\n", a, op, b);
         
         char msg[64];
-        int len = snprintf(msg, sizeof(msg), "%d %c %d\n", a, op, b); // num of bytes (characters) written in msg
+        int len; // num of bytes (characters) written in msg
+        int sent;
+        len = snprintf(msg, sizeof(msg), "NUMBER : %d\n", a); 
         if (len < 0 || len >= sizeof(msg)) { // verify formatting
             printf("Failed to format message.\n");
             closesocket(sock);
             WSACleanup();
             return 1;
         }
-
-        int sent = send(sock, msg, len, 0);
+        sent = send(sock, msg, len, 0);
         if (sent == SOCKET_ERROR) { // verify sending
-            printf("Failed to send data.\n"); 
+            printf("Failed to send first number.\n"); 
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        }
+
+        len = snprintf(msg, sizeof(msg), "NUMBER : %d\n", b);
+         if (len < 0 || len >= sizeof(msg)) { 
+            printf("Failed to format message.\n");
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        }
+        sent = send(sock, msg, len, 0);
+        if (sent == SOCKET_ERROR) {
+            printf("Failed to send second number.\n"); 
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        }
+
+        len = snprintf(msg, sizeof(msg), "OPERATOR : %c\n", op);
+         if (len < 0 || len >= sizeof(msg)) { 
+            printf("Failed to format message.\n");
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        }
+        sent = send(sock, msg, len, 0);
+        if (sent == SOCKET_ERROR) { // verify sending
+            printf("Failed to send operator.\n"); 
             closesocket(sock);
             WSACleanup();
             return 1;
         }
 
         char buffer[64];
+        printf("Waiting for server response...\n");
         int received = recv(sock, buffer, sizeof(buffer) - 1, 0);
         if (received == SOCKET_ERROR) {
             printf("Failed to receive data.\n"); // verify receiving
